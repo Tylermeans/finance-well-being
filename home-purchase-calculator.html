@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>House Fund Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #F5F0E8; --ink: #1A1410; --rust: #B84C2E; --gold: #C8960C;
+    --sage: #4A6741; --muted: #6B6258; --rule: #D4C9B8; --card-bg: #FDFAF5;
+    --danger: #C0392B; --warn: #D4790A;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-serif: 'Lora', Georgia, serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  body { background: var(--cream); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; min-height: 100vh; padding: 40px 20px 80px; }
+
+  .masthead { text-align: center; margin-bottom: 48px; }
+  .masthead::before, .masthead::after { content: ''; display: block; height: 2px; background: linear-gradient(to right, transparent, var(--ink), transparent); margin: 12px 0; }
+  .masthead-label { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  h1 { font-family: var(--font-serif); font-size: clamp(32px, 6vw, 56px); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
+  h1 span { color: var(--rust); }
+  .subtitle { font-size: 13px; letter-spacing: 0.05em; color: var(--muted); margin-top: 8px; }
+
+  .section-heading { max-width: 960px; margin: 44px auto 16px; display: flex; align-items: center; gap: 14px; }
+  .section-num { font-family: var(--font-serif); font-size: 13px; color: var(--rust); white-space: nowrap; }
+  .section-title { font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .section-line { flex: 1; height: 1px; background: var(--rule); }
+
+  .layout { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+  .panel { background: var(--card-bg); border: 1px solid var(--rule); padding: 28px; }
+  .panel-full { grid-column: 1 / -1; }
+
+  .panel-label { font-size: 13px; letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .panel-label::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+
+  input[type="number"], input[type="text"], select {
+    width: 100%; background: var(--cream); border: 1px solid var(--rule); color: var(--ink);
+    font-family: var(--font-body); font-size: 15px; padding: 10px 12px; outline: none; transition: border-color 0.15s; -webkit-appearance: none; appearance: none;
+  }
+  input[type="number"]:focus, input[type="text"]:focus, select:focus { border-color: var(--rust); }
+  input[type="range"] { width: 100%; -webkit-appearance: none; height: 3px; background: var(--rule); outline: none; margin-top: 8px; cursor: pointer; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--rust); border-radius: 50%; cursor: pointer; }
+
+  .prefix-wrap { position: relative; }
+  .prefix-wrap::before { content: attr(data-prefix); position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
+  .prefix-wrap input { padding-left: 24px; }
+  .suffix-wrap { position: relative; }
+  .suffix-wrap::after { content: attr(data-suffix); position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 13px; pointer-events: none; }
+  .suffix-wrap input { padding-right: 30px; }
+
+  .range-display { font-size: 13px; color: var(--rust); font-weight: 500; margin-top: 5px; display: inline-block; }
+
+  .results-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-bottom: 24px; }
+  @media (max-width: 600px) { .results-grid { grid-template-columns: 1fr; } }
+
+  .result-cell { background: var(--card-bg); padding: 20px 18px; }
+  .result-cell.highlight { background: var(--ink); }
+  .result-cell.highlight .cell-label { color: #9A8F80; }
+  .result-cell.highlight .cell-value { color: var(--gold); }
+  .result-cell.warn-cell { background: #FFF8F0; }
+  .result-cell.danger-cell { background: #FFF0EE; }
+
+  .cell-label { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .cell-value { font-family: var(--font-serif); font-size: clamp(18px, 3vw, 26px); font-weight: 700; color: var(--ink); line-height: 1; }
+  .cell-value.danger { color: var(--danger); }
+  .cell-value.warn { color: var(--warn); }
+  .cell-value.good { color: var(--sage); }
+  .cell-sub { font-size: 13px; color: var(--muted); margin-top: 5px; letter-spacing: 0.08em; line-height: 1.5; }
+
+  .wf-row { display: flex; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--rule); gap: 10px; }
+  .wf-row:last-child { border-bottom: none; }
+  .wf-label { font-size: 13px; letter-spacing: 0.03em; color: var(--muted); text-transform: uppercase; width: 150px; flex-shrink: 0; }
+  .wf-bar-wrap { flex: 1; height: 4px; background: var(--rule); position: relative; }
+  .wf-bar { position: absolute; left: 0; top: 0; bottom: 0; background: var(--rust); transition: width 0.4s ease; }
+  .wf-bar.positive { background: var(--sage); }
+  .wf-amount { font-family: var(--font-serif); font-size: 14px; text-align: right; min-width: 90px; }
+  .wf-amount.negative { color: var(--rust); }
+  .wf-amount.positive { color: var(--sage); }
+
+  /* Debt */
+  .debt-cols { display: grid; grid-template-columns: 1fr 110px 110px 36px; gap: 8px; margin-bottom: 6px; }
+  .debt-col-label { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .debt-item { display: grid; grid-template-columns: 1fr 110px 110px 36px; gap: 8px; align-items: center; margin-bottom: 8px; animation: slideIn 0.2s ease; }
+  .debt-item input { font-size: 13px; }
+  #expense-list .debt-item { grid-template-columns: 1fr 1fr 36px; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 600px) { .debt-item, .debt-cols { grid-template-columns: 1fr 1fr; } .debt-item .debt-del { grid-column: 2; justify-self: end; } }
+
+  .debt-del { width: 36px; height: 38px; background: none; border: 1px solid var(--rule); color: var(--muted); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-family: inherit; }
+  .debt-del:hover { background: var(--rust); color: white; border-color: var(--rust); }
+  .btn-add { font-family: var(--font-body); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; padding: 9px 18px; background: none; border: 1px solid var(--ink); color: var(--ink); cursor: pointer; transition: all 0.15s; }
+  .btn-add:hover { background: var(--ink); color: var(--cream); }
+
+  .dti-meter-track { height: 6px; background: var(--rule); position: relative; overflow: hidden; margin: 8px 0 4px; }
+  .dti-meter-fill { position: absolute; left: 0; top: 0; bottom: 0; transition: width 0.4s ease, background 0.3s ease; }
+  .dti-labels { display: flex; justify-content: space-between; font-size: 12px; letter-spacing: 0.04em; color: var(--muted); }
+  .dti-big { font-family: var(--font-serif); font-size: 30px; font-weight: 700; margin-bottom: 2px; }
+
+  .pill { display: inline-block; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; margin-left: 8px; vertical-align: middle; font-family: var(--font-body); }
+  .pill-good { background: #EAF5E8; color: var(--sage); }
+  .pill-warn { background: #FFF3E0; color: var(--warn); }
+  .pill-bad  { background: #FEECEC; color: var(--danger); }
+
+  .house-summary { background: var(--ink); color: var(--cream); padding: 28px; grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1px 1fr 1px 1fr; gap: 24px; align-items: center; }
+  @media (max-width: 600px) { .house-summary { grid-template-columns: 1fr; } .hs-divider { display: none; } }
+  .hs-divider { background: #3A3028; height: 60px; }
+  .hs-label { font-size: 12px; letter-spacing: 0.03em; text-transform: uppercase; color: #9A8F80; margin-bottom: 6px; }
+  .hs-value { font-family: var(--font-serif); font-size: clamp(22px, 4vw, 34px); font-weight: 700; color: var(--gold); line-height: 1; }
+  .hs-sub { font-size: 13px; color: #7A6F62; margin-top: 4px; line-height: 1.5; }
+
+  .budget-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--rule); gap: 8px; }
+  .budget-row:last-child { border-bottom: none; }
+  .budget-lbl { font-size: 12px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .budget-val { font-family: var(--font-serif); font-size: 16px; }
+  .budget-val.neg { color: var(--rust); }
+  .budget-val.pos { color: var(--sage); }
+  .budget-val.zero { color: var(--warn); }
+  .budget-row.total { border-top: 2px solid var(--ink); margin-top: 2px; padding-top: 10px; }
+  .budget-row.total .budget-lbl { color: var(--ink); }
+  .budget-row.total .budget-val { font-size: 20px; }
+
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237A6F62'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+  .amort-btn { font-family: var(--font-body); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; padding: 9px 16px; background: none; border: 1px solid var(--rule); color: var(--muted); cursor: pointer; margin-top: 24px; transition: all 0.15s; }
+  .amort-btn:hover, .amort-btn.open { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+  .amort-wrap { display: none; border: 1px solid var(--rule); margin-top: 12px; overflow-x: auto; }
+  .amort-wrap.open { display: block; }
+  .amort-toolbar { padding: 10px 14px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; background: var(--cream); }
+  .amort-view-btn { font-family: var(--font-body); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; }
+  .amort-view-btn:hover { color: var(--rust); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { padding: 8px 10px; text-align: right; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); background: var(--cream); }
+  thead th:first-child { text-align: left; }
+  tbody td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--rule); }
+  tbody td:first-child { text-align: left; color: var(--muted); }
+  tbody tr:nth-child(even) td { background: #FAF7F1; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .note { font-size: 13px; letter-spacing: 0.02em; color: var(--muted); margin-top: 12px; line-height: 1.9; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* Payoff outlook table */
+  .payoff-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .payoff-table th { padding: 7px 10px; text-align: left; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--rule); }
+  .payoff-table th:not(:first-child) { text-align: right; }
+  .payoff-table td { padding: 9px 10px; border-bottom: 1px solid var(--rule); font-size: 12px; }
+  .payoff-table td:not(:first-child) { text-align: right; font-family: var(--font-serif); }
+  .payoff-table tr:last-child td { border-bottom: none; }
+  .payoff-table tr.paid-off td { color: var(--sage); }
+  .payoff-table tr.still-owed td { color: var(--ink); }
+  .payoff-tag { display: inline-block; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 7px; border-radius: 2px; margin-left: 6px; font-family: var(--font-body); vertical-align: middle; }
+  .payoff-tag.done { background: #EAF5E8; color: var(--sage); }
+  .payoff-tag.owed { background: #FFF3E0; color: var(--warn); }
+
+  /* Purchase scenario */
+  .scenario-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: #3A3028; border: 1px solid #3A3028; margin-top: 16px; }
+  @media (max-width: 600px) { .scenario-grid { grid-template-columns: 1fr 1fr; } }
+  .scenario-cell { background: #261E18; padding: 18px 16px; }
+  .scenario-cell.bright { background: #1A1410; }
+  .scenario-label { font-size: 12px; letter-spacing: 0.32em; text-transform: uppercase; color: #9A8F80; margin-bottom: 6px; }
+  .scenario-value { font-family: var(--font-serif); font-size: clamp(16px, 2.5vw, 22px); font-weight: 700; color: var(--gold); line-height: 1; }
+  .scenario-value.ok { color: #7DC470; }
+  .scenario-value.warn { color: #E8A44A; }
+  .scenario-value.bad { color: #E07070; }
+  .scenario-sub { font-size: 13px; color: #7A6F62; margin-top: 4px; line-height: 1.5; }
+
+  /* Price comparison table */
+  .price-comp-wrap { overflow-x: auto; margin-top: 16px; }
+  .price-comp-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+  .price-comp-table thead th {
+    padding: 9px 12px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #9A8F80; border-bottom: 1px solid #3A3028; text-align: right; background: #1A1410;
+    white-space: nowrap;
+  }
+  .price-comp-table thead th:first-child { text-align: left; width: 160px; }
+  .price-comp-table thead th:last-child { width: 36px; background: #1A1410; border: none; }
+  .price-comp-table tbody tr { border-bottom: 1px solid #2E2318; transition: background 0.15s; }
+  .price-comp-table tbody tr:hover td { background: #221A12; }
+  .price-comp-table tbody td {
+    padding: 11px 12px; text-align: right; color: var(--cream);
+    font-family: var(--font-serif); font-size: 15px; background: #1E1610;
+  }
+  .price-comp-table tbody td:first-child { text-align: left; font-family: var(--font-body); font-size: 13px; }
+  .price-comp-table tbody td.ok  { color: #7DC470; }
+  .price-comp-table tbody td.warn { color: #E8A44A; }
+  .price-comp-table tbody td.bad  { color: #E07070; }
+  .price-comp-table tbody td.gold { color: var(--gold); font-weight: 700; }
+  .price-comp-table tfoot td {
+    padding: 10px 12px; background: #141008; color: #7A6F62;
+    font-size: 13px; letter-spacing: 0.1em;
+  }
+
+  /* Price input row */
+  .price-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .price-input-row input[type="number"] { width: 160px; font-size: 14px; }
+  .price-input-row input[type="text"]   { width: 140px; font-size: 13px; }
+  .btn-add-price {
+    font-family: var(--font-body); font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 9px 16px; background: none; border: 1px solid #9A8F80; color: #9A8F80; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-add-price:hover { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+  .price-del {
+    width: 28px; height: 28px; background: none; border: 1px solid #3A3028; color: #7A6F62;
+    cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-family: inherit; flex-shrink: 0;
+  }
+  .price-del:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+  .btn-use-price {
+    font-family: var(--font-body); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase;
+    padding: 4px 10px; background: none; border: 1px solid #9A8F80; color: #9A8F80;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+  }
+  .btn-use-price:hover { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+  .btn-use-price.active { background: var(--sage); color: white; border-color: var(--sage); cursor: default; }
+
+  /* Home sale calculator */
+  .sale-slider-wrap { margin: 8px 0 4px; }
+  .sale-slider-val { font-family: var(--font-serif); font-size: 36px; font-weight: 700; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+  .sale-slider-sub { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  input[type="range"].sale-slider { height: 6px; }
+  input[type="range"].sale-slider::-webkit-slider-thumb { width: 22px; height: 22px; background: var(--ink); }
+
+  .sale-waterfall { margin-top: 20px; }
+  .sale-wf-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--rule); gap: 12px; }
+  .sale-wf-row:last-child { border-bottom: none; }
+  .sale-wf-label { font-size: 13px; font-weight: 500; color: var(--muted); flex: 1; }
+  .sale-wf-pct { font-size: 12px; color: var(--muted); width: 48px; text-align: right; }
+  .sale-wf-bar-wrap { width: 120px; height: 4px; background: var(--rule); position: relative; flex-shrink: 0; }
+  .sale-wf-bar { position: absolute; left: 0; top: 0; bottom: 0; background: var(--rust); transition: width 0.35s ease; }
+  .sale-wf-bar.deduct { background: var(--rust); }
+  .sale-wf-bar.proceeds { background: var(--sage); }
+  .sale-wf-amount { font-family: var(--font-serif); font-size: 16px; font-weight: 600; min-width: 100px; text-align: right; }
+  .sale-wf-amount.neg { color: var(--rust); }
+  .sale-wf-amount.pos { color: var(--sage); }
+
+  .sale-net-box { margin-top: 20px; background: var(--ink); color: var(--cream); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+  .sale-net-label { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #9A8F80; margin-bottom: 4px; }
+  .sale-net-value { font-family: var(--font-serif); font-size: clamp(24px, 4vw, 38px); font-weight: 700; color: var(--gold); line-height: 1; }
+  .sale-net-sub { font-size: 12px; color: #7A6F62; margin-top: 4px; }
+  .sale-net-note { font-size: 12px; color: #9A8F80; max-width: 280px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-label">Columbus, Ohio · Married Filing Jointly · 2025</div>
+  <h1>The <span>House Fund</span><br>Calculator</h1>
+  <div class="subtitle">Current Home → Income → Taxes → Debts → New Mortgage → Buying Power</div>
+</div>
+
+<!-- ══ 00 CURRENT HOME ══ -->
+<div class="section-heading">
+  <span class="section-num">00</span><span class="section-line"></span>
+  <span class="section-title">Current Home</span><span class="section-line"></span>
+</div>
+<div class="layout">
+  <div class="panel">
+    <div class="panel-label">Property</div>
+    <div class="field"><label>Current Market Value</label>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" id="cur_value" value="385000" min="0" max="5000000" step="5000" oninput="calculate()"></div></div>
+    <div class="field"><label>Remaining Loan Balance</label>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" id="cur_balance" value="215000" min="0" max="5000000" step="1000" oninput="calculate()"></div></div>
+    <div class="field"><label>Current Monthly Payment (PITI)</label>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" id="cur_payment" value="1500" min="0" max="20000" step="50" oninput="calculate()"></div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-label">Remaining Loan</div>
+    <div class="field"><label>Years Remaining</label>
+      <input type="number" id="cur_yrs" value="24" min="0" max="30" step="1" oninput="calculate()"></div>
+    <div class="field"><label>Months Remaining (beyond years)</label>
+      <input type="number" id="cur_mos" value="10" min="0" max="11" step="1" oninput="calculate()"></div>
+    <div class="field"><label>Estimated Selling Costs</label>
+      <div class="suffix-wrap" data-suffix="%"><input type="number" id="sell_costs_pct" value="6" min="0" max="15" step="0.5" oninput="calculate()"></div>
+      <div class="note" style="margin-top:6px;">Agent commissions, closing costs, etc.</div>
+    </div>
+  </div>
+  <!-- Current home summary bar -->
+  <div class="house-summary" id="cur-home-summary"></div>
+
+  <!-- Home Sale Calculator -->
+  <div class="panel panel-full">
+    <div class="panel-label">Home Sale Calculator</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;">
+
+      <!-- Left: price slider + costs -->
+      <div>
+        <label class="field" style="margin-bottom:6px;">
+          <span style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);">Sale Price</span>
+        </label>
+        <div class="sale-slider-val" id="sale_price_disp">$385,000</div>
+        <div class="sale-slider-sub" id="sale_vs_market"></div>
+        <input type="range" class="sale-slider" id="sale_price_slider"
+          min="200000" max="700000" step="5000" value="385000"
+          oninput="onSaleSlider()" style="width:100%;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:-10px;margin-bottom:20px;">
+          <span>$200k</span><span>$700k</span>
+        </div>
+
+        <div class="field">
+          <label>Realtor Commission</label>
+          <div class="suffix-wrap" data-suffix="%">
+            <input type="number" id="sale_commission" value="5.5" min="0" max="10" step="0.25" oninput="calculate()">
+          </div>
+          <div class="note" style="margin-top:4px;">Total (listing + buyer's agent). 5-6% is typical.</div>
+        </div>
+
+        <div class="field">
+          <label>Seller Closing Costs</label>
+          <div class="suffix-wrap" data-suffix="%">
+            <input type="number" id="sale_closing_pct" value="1" min="0" max="5" step="0.25" oninput="calculate()">
+          </div>
+          <div class="note" style="margin-top:4px;">Title, transfer taxes, attorney fees, etc.</div>
+        </div>
+
+        <div class="field">
+          <label>Updates / Concessions <span style="font-size:11px;color:var(--muted);font-weight:400;">(pre-sale repairs, buyer credits)</span></label>
+          <div class="prefix-wrap" data-prefix="$">
+            <input type="number" id="sale_concessions" value="0" min="0" max="100000" step="500" oninput="calculate()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: waterfall breakdown -->
+      <div>
+        <div class="panel-label" style="margin-bottom:12px;">Proceeds Breakdown</div>
+        <div class="sale-waterfall" id="sale-waterfall"></div>
+        <div class="sale-net-box" id="sale-net-box"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ 00.5 OTHER ASSETS ══ -->
+<div class="section-heading">
+  <span class="section-num">00.5</span><span class="section-line"></span>
+  <span class="section-title">Other Assets</span><span class="section-line"></span>
+</div>
+<div class="layout">
+  <div class="panel">
+    <div class="panel-label">Owned Assets <span style="font-size:8px;color:var(--muted);margin-left:4px;letter-spacing:0.1em;">(no loan)</span></div>
+    <div class="debt-cols" style="grid-template-columns:1fr 1fr 36px;">
+      <div class="debt-col-label">Description</div>
+      <div class="debt-col-label">Est. Value</div>
+      <div></div>
+    </div>
+    <div id="asset-list"></div>
+    <button class="btn-add" onclick="addAsset()" style="margin-top:4px;">+ Add Asset</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Asset Notes</div>
+    <p class="note" style="margin-top:0;line-height:2;">Assets listed here are included in your <strong>net worth</strong> calculation but do not affect DTI or mortgage math — lenders don't count personal property as qualifying assets for down payment.<br><br>If an asset has a loan balance (e.g. a financed camper), add it to the <strong>Loan Obligations</strong> panel instead.<br><br>Camper storage ($70/mo) has been added to your Fixed Expenses automatically.</p>
+  </div>
+
+  <div class="panel panel-full">
+    <div class="panel-label">Net Worth Snapshot</div>
+    <div class="results-grid" id="net-worth-summary"></div>
+  </div>
+</div>
+
+<!-- ══ 01 INCOME ══ -->
+<div class="section-heading">
+  <span class="section-num">01</span><span class="section-line"></span>
+  <span class="section-title">Income & Retirement</span><span class="section-line"></span>
+</div>
+<div class="layout">
+  <div class="panel">
+    <div class="panel-label">Salaries</div>
+    <div class="field"><label>Your Gross Salary</label>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" id="salary1" value="120000" min="0" max="1000000" step="1000" oninput="calculate()"></div></div>
+    <div class="field"><label>Spouse Gross Salary</label>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" id="salary2" value="120000" min="0" max="1000000" step="1000" oninput="calculate()"></div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-label">Pretax 401k</div>
+    <div class="field"><label>Your 401k % <span style="color:var(--muted);font-size:8px;">(you: ~$5,000/yr @ 4.17%)</span></label>
+      <div class="suffix-wrap" data-suffix="%"><input type="number" id="k401_1" value="4.17" min="0" max="100" step="0.01" oninput="sync401(1);calculate()"></div>
+      <input type="range" id="k401_1r" min="0" max="23" step="0.01" value="4.17" oninput="syncRange(1)">
+      <span class="range-display" id="k401_1_disp">$5,004 / yr</span></div>
+    <div class="field"><label>Spouse 401k %</label>
+      <div class="suffix-wrap" data-suffix="%"><input type="number" id="k401_2" value="9" min="0" max="100" step="1" oninput="sync401(2);calculate()"></div>
+      <input type="range" id="k401_2r" min="0" max="23" step="1" value="9" oninput="syncRange(2)">
+      <span class="range-display" id="k401_2_disp">$10,800 / yr</span></div>
+  </div>
+  <div class="panel panel-full">
+    <div class="panel-label">After-Tax Picture</div>
+    <div class="results-grid" id="results-grid"></div>
+    <div class="panel-label" style="margin-top:24px;">Income Waterfall</div>
+    <div id="waterfall"></div>
+  </div>
+</div>
+
+<!-- ══ 02 DEBTS ══ -->
+<div class="section-heading">
+  <span class="section-num">02</span><span class="section-line"></span>
+  <span class="section-title">Monthly Debts & Expenses</span><span class="section-line"></span>
+</div>
+<div class="layout">
+  <div class="panel">
+    <div class="panel-label">Loan Obligations <span style="font-size:8px;color:var(--muted);margin-left:4px;letter-spacing:0.1em;">(counted in DTI)</span></div>
+    <div class="debt-cols" style="grid-template-columns:1.4fr 90px 100px 80px 70px 36px;">
+      <div class="debt-col-label">Description</div>
+      <div class="debt-col-label">Payment/mo</div>
+      <div class="debt-col-label">Balance</div>
+      <div class="debt-col-label">Rate %</div>
+      <div class="debt-col-label">Mo. Left</div>
+      <div></div>
+    </div>
+    <div id="debt-list"></div>
+    <button class="btn-add" onclick="addDebt()" style="margin-top:4px;">+ Add Debt</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Fixed Monthly Expenses <span style="font-size:8px;color:var(--muted);margin-left:4px;letter-spacing:0.1em;">(not in DTI)</span></div>
+    <div class="debt-cols" style="grid-template-columns:1fr 1fr 36px;">
+      <div class="debt-col-label">Description</div>
+      <div class="debt-col-label">Monthly Amount</div>
+      <div></div>
+    </div>
+    <div id="expense-list"></div>
+    <button class="btn-add" onclick="addExpense()" style="margin-top:4px;">+ Add Expense</button>
+  </div>
+
+  <div class="panel panel-full">
+    <div class="two-col">
+      <div>
+        <div class="panel-label" style="margin-bottom:10px;">Debt-to-Income Ratio</div>
+        <div class="dti-big" id="dti-value">—</div>
+        <div class="dti-meter-track"><div class="dti-meter-fill" id="dti-fill"></div></div>
+        <div class="dti-labels"><span>0%</span><span>28%</span><span>36%</span><span>43%</span><span>50%</span></div>
+        <p id="dti-note" class="note" style="margin-top:10px;"></p>
+      </div>
+      <div>
+        <div class="panel-label" style="margin-bottom:10px;">Obligation Summary</div>
+        <div id="debt-summary"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 03 HOME PURCHASE ══ -->
+<div class="section-heading">
+  <span class="section-num">03</span><span class="section-line"></span>
+  <span class="section-title">Home Purchase & Mortgage</span><span class="section-line"></span>
+</div>
+<div class="layout">
+  <div class="panel">
+    <div class="panel-label">Down Payment</div>
+    <div class="field"><label>Equity from Sale <span style="color:var(--rust);font-size:8px;">(auto from §00)</span></label>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" id="equity" value="150000" min="0" max="2000000" step="5000" oninput="calculate()" style="background:#F0EDE6;color:var(--muted);" readonly></div></div>
+    <div class="field"><label>Monthly Savings Toward House</label>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" id="monthlysave" value="2000" min="0" max="20000" step="100" oninput="calculate()"></div></div>
+    <div class="field"><label>Months Until Purchase</label>
+      <input type="number" id="months" value="18" min="1" max="120" step="1" oninput="calculate()">
+      <input type="range" id="monthsr" min="1" max="60" step="1" value="18" oninput="document.getElementById('months').value=this.value;calculate()">
+      <span class="range-display" id="months_disp">18 months</span></div>
+    <div class="field"><label>Down Payment %</label>
+      <div class="suffix-wrap" data-suffix="%"><input type="number" id="downpct" value="20" min="3" max="100" step="1" oninput="calculate()"></div>
+      <input type="range" id="downpctr" min="3" max="100" step="1" value="20" oninput="document.getElementById('downpct').value=this.value;calculate()"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-label">Mortgage</div>
+    <div class="field"><label>Loan Term</label>
+      <select id="loanterm" onchange="calculate()">
+        <option value="30">30-Year Fixed</option>
+        <option value="20">20-Year Fixed</option>
+        <option value="15">15-Year Fixed</option>
+        <option value="10">10-Year Fixed</option>
+      </select></div>
+    <div class="field"><label>Interest Rate</label>
+      <div class="suffix-wrap" data-suffix="%"><input type="number" id="mortrate" value="6.75" min="1" max="20" step="0.125" oninput="calculate()"></div>
+      <input type="range" id="mortRater" min="1" max="15" step="0.125" value="6.75" oninput="document.getElementById('mortrate').value=parseFloat(this.value).toFixed(3);calculate()">
+      <span class="range-display" id="mortrate_disp">6.750%</span></div>
+    <div class="field"><label>Annual Property Tax Rate</label>
+      <div class="suffix-wrap" data-suffix="%"><input type="number" id="proptax" value="1.36" min="0" max="5" step="0.01" oninput="calculate()"></div></div>
+    <div class="field"><label>Annual Home Insurance</label>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" id="insurance" value="1800" min="0" max="20000" step="100" oninput="calculate()"></div></div>
+    <div class="field">
+      <label>Active Home Price <span style="color:var(--rust);font-size:8px;">— set via comparison table below</span></label>
+      <div style="display:flex;gap:8px;align-items:stretch;">
+        <div class="prefix-wrap" data-prefix="$" style="flex:1;">
+          <input type="number" id="homeprice_override" value="" min="0" max="5000000" step="5000"
+            placeholder="or type directly here..." oninput="calculate()"
+            style="border:2px solid var(--rust);">
+        </div>
+        <button onclick="document.getElementById('homeprice_override').value='';calculate();"
+          style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:0 12px;background:none;border:1px solid var(--rule);color:var(--muted);cursor:pointer;white-space:nowrap;">
+          Clear
+        </button>
+      </div>
+      <div id="active-price-note" class="note" style="margin-top:6px;"></div>
+    </div>
+  </div>
+
+  <!-- House bar -->
+  <div class="house-summary" id="house-summary"></div>
+
+  <!-- Loan Payoff Outlook -->
+  <div class="panel panel-full">
+    <div class="panel-label">Loan Payoff Outlook at Purchase Date</div>
+    <div id="payoff-outlook"></div>
+  </div>
+
+  <!-- Purchase Price Comparison -->
+  <div class="panel panel-full" style="background:var(--ink);border-color:var(--ink);color:var(--cream);">
+    <div class="panel-label" style="color:#9A8F80;">Price Comparison Calculator</div>
+    <p style="font-size:9px;letter-spacing:0.12em;color:#7A6F62;margin-bottom:16px;">Enter any home prices to compare monthly payments side by side. Down payment is your net sale proceeds + savings + any early loan payoffs. All numbers live-update with your inputs above.</p>
+
+    <div class="price-input-row">
+      <div class="prefix-wrap" data-prefix="$" style="position:relative;">
+        <input type="number" id="new-price-input" min="0" max="5000000" step="5000" placeholder="Enter price..." style="background:#261E18;border-color:#3A3028;color:var(--cream);width:180px;">
+      </div>
+      <input type="text" id="new-price-label" placeholder="Label (optional)" style="background:#261E18;border-color:#3A3028;color:var(--cream);">
+      <button class="btn-add-price" onclick="addPriceScenario()">+ Add Price</button>
+    </div>
+
+    <div class="price-comp-wrap">
+      <table class="price-comp-table" id="price-comp-table">
+        <thead>
+          <tr>
+            <th>Price</th>
+            <th>Down Pmt</th>
+            <th>Down %</th>
+            <th>Loan Amount</th>
+            <th>P&amp;I /mo</th>
+            <th>PITI /mo</th>
+            <th>PMI</th>
+            <th>DTI</th>
+            <th>Left Over</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="price-comp-body"></tbody>
+        <tfoot><tr><td colspan="10" id="price-comp-foot"></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Mortgage breakdown -->
+  <div class="panel panel-full">
+    <div class="panel-label" id="mortgage-panel-label">Mortgage Payment Breakdown</div>
+    <div class="results-grid" id="mortgage-results"></div>
+
+    <div class="panel-label" style="margin-top:28px;">Monthly Budget After All Obligations</div>
+    <div id="budget-breakdown"></div>
+
+    <button class="amort-btn" id="amort-btn" onclick="toggleAmort()">Show Amortization Schedule</button>
+    <div class="amort-wrap" id="amort-wrap">
+      <div class="amort-toolbar">
+        <span style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);">Amortization</span>
+        <button class="amort-view-btn" id="amort-view-btn" onclick="toggleAmortView()">Switch to Monthly View</button>
+      </div>
+      <div id="amort-table-container"></div>
+    </div>
+  </div>
+
+  <div class="panel panel-full">
+    <div class="note" id="footnotes"></div>
+  </div>
+</div>
+
+<script>
+// -- State ------------------------------------------------------------------
+// Assets: things you own with value (no loan = pure equity)
+let assets = [
+  { id: 201, label: 'Camper',         value: 17500 },
+  { id: 202, label: 'Car (paid off)', value: 20000 },
+];
+let nextAssetId = 203;
+
+// Price comparison scenarios -- start empty, user adds their own
+let priceScenarios = [];
+let nextPriceId = 301;
+
+// Debts: count toward DTI -- include rate & term for payoff math
+let debts = [
+  { id: 1, label: 'Truck Payment (Tyler)', payment: 600, balance: 40000, rate: 5.0, termMonths: 79 },
+  { id: 2, label: 'Jeep Payment (Wife)',   payment: 400, balance:  6000, rate: 3.0, termMonths: 16 },
+];
+// Expenses: fixed monthly costs, NOT counted in DTI but subtracted from budget
+let expenses = [
+  { id: 101, label: 'Auto Insurance',       amount: 250 },
+  { id: 102, label: 'Electric Bill',        amount: 200 },
+  { id: 103, label: 'Gas (Utilities)',       amount: 100 },
+  { id: 104, label: 'Cell Phone',           amount: 160 },
+  { id: 105, label: 'Water & Sewage',       amount: 100 },
+  { id: 106, label: 'Health Insurance',     amount: 700 },
+  { id: 107, label: 'Camper Storage',       amount:  70 },
+];
+let nextId = 3;
+let nextExpId = 108;
+let amortMonthly = false;
+
+// -- Tax --------------------------------------------------------------------
+function calcFederalTax(t) {
+  const b = [[23200,.10],[94300,.12],[201050,.22],[383900,.24],[487450,.32],[731200,.35],[Infinity,.37]];
+  let tax=0, prev=0;
+  for(const [lim,r] of b){if(t<=prev)break;tax+=(Math.min(t,lim)-prev)*r;prev=lim;}
+  return tax;
+}
+function calcOhioTax(t){
+  if(t<=26050)return 0;
+  if(t<=100000)return(t-26050)*0.0275;
+  return(100000-26050)*0.0275+(t-100000)*0.03125;
+}
+function calcFICA(g){return Math.min(g,176100)*0.062+g*0.0145+Math.max(0,g-200000)*0.009;}
+
+// -- Mortgage ---------------------------------------------------------------
+function calcPI(principal, annRate, years){
+  if(!annRate)return principal/(years*12);
+  const r=annRate/100/12, n=years*12;
+  return principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+}
+function buildSchedule(principal, annRate, years){
+  const r=annRate/100/12, n=years*12;
+  const pmt=calcPI(principal,annRate,years);
+  let bal=principal; const rows=[];
+  for(let m=1;m<=n;m++){
+    const int=bal*r, princ=pmt-int;
+    bal=Math.max(0,bal-princ);
+    rows.push({month:m,payment:pmt,interest:int,principal:princ,balance:bal});
+  }
+  return rows;
+}
+
+// -- Helpers & Format -------------------------------------------------------
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function safeNum(n) {
+  return (!isFinite(n) || isNaN(n)) ? 0 : n;
+}
+const fmt  = n => '$' + Math.round(safeNum(n)).toLocaleString();
+const fmtD = n => '$' + safeNum(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const fmtP = n => (safeNum(n) * 100).toFixed(1) + '%';
+
+// -- Debt helpers -----------------------------------------------------------
+function debtMonthsRemaining(d){
+  // Use explicit termMonths if set, else derive from balance/payment
+  if(d.termMonths && d.termMonths > 0) return d.termMonths;
+  if(!d.payment || d.payment <= 0) return 999;
+  if(!d.rate || d.rate <= 0) return Math.ceil(d.balance / d.payment);
+  const r = d.rate / 100 / 12;
+  // n = -ln(1 - r*B/P) / ln(1+r)
+  const ratio = r * d.balance / d.payment;
+  if(ratio >= 1) return 999; // payment doesn't cover interest
+  return Math.ceil(-Math.log(1 - ratio) / Math.log(1 + r));
+}
+
+function balanceAfterMonths(d, months){
+  if(!d.balance || d.balance <= 0) return 0;
+  if(!d.rate || d.rate <= 0) return Math.max(0, d.balance - d.payment * months);
+  const r = d.rate / 100 / 12;
+  const P = d.payment;
+  const B = d.balance;
+  // B(n) = B*(1+r)^n - P*((1+r)^n - 1)/r
+  const factor = Math.pow(1 + r, months);
+  return Math.max(0, B * factor - P * (factor - 1) / r);
+}
+
+// -- Debt UI ----------------------------------------------------------------
+function renderDebts(){
+  document.getElementById('debt-list').innerHTML = debts.map(d=>`
+    <div class="debt-item" id="di-${d.id}" style="grid-template-columns:1.4fr 90px 100px 80px 70px 36px;">
+      <input type="text" value="${d.label}" placeholder="e.g. Car Loan" oninput="ud(${d.id},'label',this.value)">
+      <div class="prefix-wrap" data-prefix="$"><input type="number" value="${d.payment}" min="0" step="10" placeholder="0" oninput="ud(${d.id},'payment',+this.value||0)"></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="number" value="${d.balance}" min="0" step="100" placeholder="0" oninput="ud(${d.id},'balance',+this.value||0)"></div>
+      <div class="suffix-wrap" data-suffix="%"><input type="number" value="${d.rate||0}" min="0" max="30" step="0.1" placeholder="0" oninput="ud(${d.id},'rate',+this.value||0)"></div>
+      <input type="number" value="${d.termMonths||0}" min="0" max="360" step="1" placeholder="0" oninput="ud(${d.id},'termMonths',+this.value||0)">
+      <button class="debt-del" onclick="removeDebt(${d.id})">x</button>
+    </div>`).join('');
+}
+function addDebt(){debts.push({id:nextId++,label:'',payment:0,balance:0,rate:0,termMonths:0});renderDebts();calculate();}
+function removeDebt(id){debts=debts.filter(d=>d.id!==id);const el=document.getElementById('di-'+id);if(el)el.remove();calculate();}
+function ud(id,field,val){const d=debts.find(x=>x.id===id);if(d)d[field]=val;calculate();}
+
+// -- Expense UI -------------------------------------------------------------
+function renderExpenses(){
+  document.getElementById('expense-list').innerHTML = expenses.map(e=>`
+    <div class="debt-item" id="ei-${e.id}">
+      <input type="text" value="${e.label}" placeholder="e.g. Electric" oninput="ue(${e.id},'label',this.value)">
+      <div class="prefix-wrap" data-prefix="$" style="grid-column:span 2"><input type="number" value="${e.amount}" min="0" step="10" placeholder="0" oninput="ue(${e.id},'amount',+this.value||0)"></div>
+      <button class="debt-del" onclick="removeExpense(${e.id})">x</button>
+    </div>`).join('');
+}
+function addExpense(){expenses.push({id:nextExpId++,label:'',amount:0});renderExpenses();calculate();}
+function removeExpense(id){expenses=expenses.filter(e=>e.id!==id);const el=document.getElementById('ei-'+id);if(el)el.remove();calculate();}
+function ue(id,field,val){const e=expenses.find(x=>x.id===id);if(e)e[field]=val;calculate();}
+
+// -- Asset UI ---------------------------------------------------------------
+function renderAssets(){
+  document.getElementById('asset-list').innerHTML = assets.map(a=>`
+    <div class="debt-item" id="ai-${a.id}" style="grid-template-columns:1fr 1fr 36px;">
+      <input type="text" value="${a.label}" placeholder="e.g. Boat" oninput="ua(${a.id},'label',this.value)">
+      <div class="prefix-wrap" data-prefix="$"><input type="number" value="${a.value}" min="0" step="100" placeholder="0" oninput="ua(${a.id},'value',+this.value||0)"></div>
+      <button class="debt-del" onclick="removeAsset(${a.id})">x</button>
+    </div>`).join('');
+}
+function addAsset(){assets.push({id:nextAssetId++,label:'',value:0});renderAssets();calculate();}
+function removeAsset(id){assets=assets.filter(a=>a.id!==id);const el=document.getElementById('ai-'+id);if(el)el.remove();calculate();}
+function ua(id,field,val){const a=assets.find(x=>x.id===id);if(a)a[field]=val;calculate();}
+
+function addPriceScenario(){
+  const price = +document.getElementById('new-price-input').value || 0;
+  const label = document.getElementById('new-price-label').value.trim() || fmt(price);
+  if (!price) return;
+  priceScenarios.push({ id: nextPriceId++, price, label });
+  document.getElementById('new-price-input').value = '';
+  document.getElementById('new-price-label').value = '';
+  calculate();
+}
+function removePriceScenario(id){
+  priceScenarios = priceScenarios.filter(s => s.id !== id);
+  calculate();
+}
+
+// -- Amort ------------------------------------------------------------------
+function toggleAmort(){
+  const w=document.getElementById('amort-wrap'),b=document.getElementById('amort-btn');
+  const o=w.classList.toggle('open');
+  b.textContent=o?'Hide Amortization Schedule':'Show Amortization Schedule';
+  b.classList.toggle('open',o);
+}
+function toggleAmortView(){
+  amortMonthly=!amortMonthly;
+  document.getElementById('amort-view-btn').textContent=amortMonthly?'Switch to Annual View':'Switch to Monthly View';
+  calculate();
+}
+
+function onSaleSlider() {
+  const val = +document.getElementById('sale_price_slider').value || 0;
+  document.getElementById('sale_price_disp').textContent = fmt(val);
+  calculate();
+}
+
+// -- 401k sync --------------------------------------------------------------
+function sync401(p){
+  const pct=parseFloat(document.getElementById('k401_'+p).value)||0;
+  const sal=parseFloat(document.getElementById('salary'+p).value)||0;
+  const annual=Math.min(sal*pct/100,23500);
+  document.getElementById('k401_'+p+'r').value=pct;
+  document.getElementById('k401_'+p+'_disp').textContent=fmt(annual)+' / yr';
+}
+function syncRange(p){
+  document.getElementById('k401_'+p).value=document.getElementById('k401_'+p+'r').value;
+  sync401(p);
+  calculate();
+}
+
+// -- MAIN -------------------------------------------------------------------
+function calculate(){
+  const s1=+document.getElementById('salary1').value||0;
+  const s2=+document.getElementById('salary2').value||0;
+  const k1pct=Math.min(+document.getElementById('k401_1').value||0,100)/100;
+  const k2pct=Math.min(+document.getElementById('k401_2').value||0,100)/100;
+  const k1=Math.min(s1*k1pct,23500), k2=Math.min(s2*k2pct,23500);
+
+  // Update 401k display spans
+  document.getElementById('k401_1_disp').textContent=fmt(k1)+' / yr';
+  document.getElementById('k401_2_disp').textContent=fmt(k2)+' / yr';
+  const downPct=(+document.getElementById('downpct').value||20)/100;
+  const mSave=+document.getElementById('monthlysave').value||0;
+  const months=+document.getElementById('months').value||18;
+  const years=+document.getElementById('loanterm').value||30;
+  const rate=+document.getElementById('mortrate').value||6.75;
+  const propTaxR=(+document.getElementById('proptax').value||1.36)/100;
+  const insAnn=+document.getElementById('insurance').value||1800;
+  const priceOverride=+document.getElementById('homeprice_override').value||0;
+
+  // -- Current Home + Sale Calculator
+  const curValue   = +document.getElementById('cur_value').value||0;
+  const curBalance = +document.getElementById('cur_balance').value||0;
+  const curPayment = +document.getElementById('cur_payment').value||0;
+  const curYrs     = +document.getElementById('cur_yrs').value||0;
+  const curMos     = +document.getElementById('cur_mos').value||0;
+  const curLTV     = curValue > 0 ? curBalance / curValue : 0;
+  const totalMonthsLeft = curYrs * 12 + curMos;
+
+  // Sale Calculator
+  const salePrice      = +document.getElementById('sale_price_slider').value || curValue;
+  const commissionPct  = (+document.getElementById('sale_commission').value||5.5)/100;
+  const saleClosingPct = (+document.getElementById('sale_closing_pct').value||1)/100;
+  const concessions    = +document.getElementById('sale_concessions').value||0;
+  const commissionAmt  = salePrice * commissionPct;
+  const saleClosingAmt = salePrice * saleClosingPct;
+  const totalSaleCosts = commissionAmt + saleClosingAmt + concessions;
+  const grossEquity    = Math.max(0, salePrice - curBalance);
+  const netEquity      = Math.max(0, grossEquity - totalSaleCosts);
+  const sellCosts      = totalSaleCosts; // kept for compat with cur-home-summary
+
+  // Sync slider display and vs-market note
+  document.getElementById('sale_price_slider').value = salePrice;
+  document.getElementById('sale_price_disp').textContent = fmt(salePrice);
+  const vsMarket = salePrice - curValue;
+  const vsEl = document.getElementById('sale_vs_market');
+  if (vsEl) {
+    vsEl.textContent = vsMarket === 0
+      ? 'At current market value'
+      : (vsMarket > 0 ? '+' : '') + fmt(vsMarket) + ' vs. market value of ' + fmt(curValue);
+    vsEl.style.color = vsMarket < 0 ? 'var(--warn)' : vsMarket > 0 ? 'var(--sage)' : 'var(--muted)';
+  }
+
+  // Auto-populate equity field
+  document.getElementById('equity').value = Math.round(netEquity);
+  const equity = netEquity;
+
+  // Sync sliders/displays
+  document.getElementById('months_disp').textContent=months+' month'+(months===1?'':'s');
+  document.getElementById('mortrate_disp').textContent=parseFloat(rate).toFixed(3)+'%';
+  document.getElementById('mortRater').value=rate;
+  document.getElementById('downpctr').value=Math.round(downPct*100);
+  document.getElementById('monthsr').value=Math.min(months,60);
+
+  // -- Tax
+  const gross=s1+s2, total401=k1+k2;
+  const fedTax=calcFederalTax(Math.max(0,gross-total401-30000));
+  const ohioTax=calcOhioTax(Math.max(0,s1-k1))+calcOhioTax(Math.max(0,s2-k2));
+  const cityTax=gross*0.025;
+  const fica=calcFICA(s1)+calcFICA(s2);
+  const totalTax=fedTax+ohioTax+cityTax+fica;
+  const netAnn=gross-totalTax-total401;
+  const mTakeHome=netAnn/12;
+
+  // -- Debt
+  const debtPmt=debts.reduce((s,d)=>s+(+d.payment||0),0);
+  const debtBal=debts.reduce((s,d)=>s+(+d.balance||0),0);
+  const totalExpenses=expenses.reduce((s,e)=>s+(+e.amount||0),0);
+
+  // -- Assets & Net Worth
+  const otherAssets=assets.reduce((s,a)=>s+(+a.value||0),0);
+  const totalAssets=curValue+otherAssets;
+  const totalLiabilities=curBalance+debtBal;
+  const netWorth=totalAssets-totalLiabilities;
+
+  // -- Debt payoff at purchase date
+  // For each debt: what's the balance at `months` from now? Will it be paid off?
+  const debtAtPurchase = debts.map(d => {
+    const moLeft = debtMonthsRemaining(d);
+    const paidOff = moLeft <= months;
+    const balAtPurchase = paidOff ? 0 : balanceAfterMonths(d, months);
+    const pmtAtPurchase = paidOff ? 0 : d.payment;
+    const moFreed = paidOff ? months - moLeft : 0; // months of freed cash before purchase
+    const cashFreed = moFreed * d.payment;
+    return { ...d, moLeft, paidOff, balAtPurchase, pmtAtPurchase, cashFreed };
+  });
+  const debtPmtAtPurchase = debtAtPurchase.reduce((s, d) => s + d.pmtAtPurchase, 0);
+  const extraDownFromPayoffs = debtAtPurchase.reduce((s, d) => s + d.cashFreed, 0);
+
+  // -- Home (down payment now includes payoff savings)
+  const savedByClose = mSave * months;
+  const totalDown = equity + savedByClose + extraDownFromPayoffs;
+  const autoPrice = downPct > 0 ? totalDown / downPct : 0;
+  const homePrice = priceOverride > 0 ? priceOverride : autoPrice;
+  const loan = Math.max(0, homePrice - totalDown);
+  const actualDownAmt = homePrice - loan;
+  const actualDownPct = homePrice > 0 ? actualDownAmt / homePrice : 0;
+
+  // Mortgage components
+  const mPI = calcPI(loan, rate, years);
+  const mTax = (homePrice * propTaxR) / 12;
+  const mIns = insAnn / 12;
+  const mPMI = actualDownPct < 0.20 ? loan * 0.0065 / 12 : 0;
+  const totalHousing = mPI + mTax + mIns + mPMI;
+
+  // DTI -- uses debt payments as they will be AT purchase date (paid-off loans drop out)
+  const gm = gross / 12;
+  const frontDTI = totalHousing / gm;
+  const backDTI = (totalHousing + debtPmtAtPurchase) / gm;
+  const afterAll = mTakeHome - totalHousing - debtPmtAtPurchase - totalExpenses - curPayment;
+
+  // == ALL RENDERS BELOW ==
+
+  // -- RENDER: Sale Calculator Waterfall
+  const saleRows = [
+    { label: 'Sale Price',               amount: salePrice,       cls: 'pos', pct: 1 },
+    { label: 'Payoff Mortgage',          amount: -curBalance,     cls: 'neg', pct: curBalance/salePrice },
+    { label: `Commission (${fmtP(commissionPct)})`, amount: -commissionAmt, cls: 'neg', pct: commissionAmt/salePrice },
+    { label: `Closing Costs (${fmtP(saleClosingPct)})`, amount: -saleClosingAmt, cls: 'neg', pct: saleClosingAmt/salePrice },
+    { label: 'Concessions / Updates',   amount: -concessions,    cls: 'neg', pct: concessions/salePrice },
+  ].filter(r => Math.abs(r.amount) > 0 || r.label === 'Sale Price');
+
+  document.getElementById('sale-waterfall').innerHTML = saleRows.map(r => `
+    <div class="sale-wf-row">
+      <span class="sale-wf-label">${r.label}</span>
+      <span class="sale-wf-pct">${r.amount < 0 ? fmtP(r.pct) : ''}</span>
+      <div class="sale-wf-bar-wrap">
+        <div class="sale-wf-bar ${r.cls === 'neg' ? 'deduct' : 'proceeds'}" style="width:${Math.min(100, Math.abs(r.pct)*100)}%"></div>
+      </div>
+      <span class="sale-wf-amount ${r.cls === 'neg' ? 'neg' : ''}">${r.amount < 0 ? '-' : ''}${fmt(Math.abs(r.amount))}</span>
+    </div>`).join('') + `
+    <div class="sale-wf-row" style="border-top:2px solid var(--ink);margin-top:4px;">
+      <span class="sale-wf-label" style="color:var(--ink);font-weight:600;">Net Proceeds</span>
+      <span class="sale-wf-pct"></span>
+      <div class="sale-wf-bar-wrap"><div class="sale-wf-bar proceeds" style="width:${Math.min(100,safeNum(netEquity/salePrice)*100)}%"></div></div>
+      <span class="sale-wf-amount pos">${fmt(netEquity)}</span>
+    </div>`;
+
+  document.getElementById('sale-net-box').innerHTML = `
+    <div>
+      <div class="sale-net-label">Net Proceeds to Close</div>
+      <div class="sale-net-value">${fmt(netEquity)}</div>
+      <div class="sale-net-sub">This becomes your down payment</div>
+    </div>
+    <div class="sale-net-note">
+      Sale price ${fmt(salePrice)} &nbsp;?&nbsp; Total deductions ${fmt(totalSaleCosts)}
+      (${fmtP(safeNum(totalSaleCosts/salePrice))} of sale price)
+    </div>`;
+
+  // -- RENDER: Current Home Summary
+  document.getElementById('cur-home-summary').innerHTML=`
+    <div>
+      <div class="hs-label">Sale Price (slider)</div>
+      <div class="hs-value">${fmt(salePrice)}</div>
+      <div class="hs-sub">Market value: ${fmt(curValue)} &nbsp;?&nbsp; LTV ${fmtP(curLTV)}</div>
+    </div>
+    <div class="hs-divider"></div>
+    <div>
+      <div class="hs-label">Total Sale Costs</div>
+      <div class="hs-value">${fmt(totalSaleCosts)}</div>
+      <div class="hs-sub">Commission + closing + concessions</div>
+    </div>
+    <div class="hs-divider"></div>
+    <div>
+      <div class="hs-label">Net Proceeds</div>
+      <div class="hs-value">${fmt(netEquity)}</div>
+      <div class="hs-sub">${totalMonthsLeft} mo remaining . ${curYrs}yr ${curMos}mo left</div>
+    </div>`;
+
+  // -- RENDER: Net Worth Summary
+  document.getElementById('net-worth-summary').innerHTML=`
+    <div class="result-cell">
+      <div class="cell-label">Total Assets</div>
+      <div class="cell-value">${fmt(totalAssets)}</div>
+      <div class="cell-sub">home ${fmt(curValue)} + other ${fmt(otherAssets)}</div>
+    </div>
+    <div class="result-cell">
+      <div class="cell-label">Total Liabilities</div>
+      <div class="cell-value">${fmt(totalLiabilities)}</div>
+      <div class="cell-sub">mortgage ${fmt(curBalance)} + loans ${fmt(debtBal)}</div>
+    </div>
+    <div class="result-cell highlight">
+      <div class="cell-label">Est. Net Worth</div>
+      <div class="cell-value">${fmt(netWorth)}</div>
+      <div class="cell-sub">assets minus all known liabilities</div>
+    </div>`;
+
+  // -- RENDER: Tax Summary
+  document.getElementById('results-grid').innerHTML=`
+    <div class="result-cell"><div class="cell-label">Combined Gross</div><div class="cell-value">${fmt(gross)}</div><div class="cell-sub">per year</div></div>
+    <div class="result-cell"><div class="cell-label">Total Taxes</div><div class="cell-value">${fmt(totalTax)}</div><div class="cell-sub">effective ${fmtP(totalTax/gross)}</div></div>
+    <div class="result-cell highlight"><div class="cell-label">Monthly Take-Home</div><div class="cell-value">${fmt(mTakeHome)}</div><div class="cell-sub">${fmt(netAnn)} / year</div></div>
+    <div class="result-cell"><div class="cell-label">Federal Income Tax</div><div class="cell-value">${fmt(fedTax)}</div><div class="cell-sub">effective ${fmtP(fedTax/gross)}</div></div>
+    <div class="result-cell"><div class="cell-label">Ohio + Columbus</div><div class="cell-value">${fmt(ohioTax+cityTax)}</div><div class="cell-sub">state + 2.5% city</div></div>
+    <div class="result-cell"><div class="cell-label">FICA</div><div class="cell-value">${fmt(fica)}</div><div class="cell-sub">SS + Medicare, both earners</div></div>`;
+
+  // Waterfall
+  document.getElementById('waterfall').innerHTML=[
+    {l:'Gross Income',     a:gross,               t:''},
+    {l:'401k (Pretax)',    a:-total401,            t:'negative'},
+    {l:'Federal Tax',      a:-fedTax,              t:'negative'},
+    {l:'FICA',             a:-fica,                t:'negative'},
+    {l:'Ohio + Columbus',  a:-(ohioTax+cityTax),   t:'negative'},
+    {l:'Net Take-Home',    a:netAnn,               t:'positive'},
+  ].map(r=>`<div class="wf-row">
+    <div class="wf-label">${r.l}</div>
+    <div class="wf-bar-wrap"><div class="wf-bar ${r.t}" style="width:${Math.max(0,Math.abs(r.a)/gross*100)}%"></div></div>
+    <div class="wf-amount ${r.a<0?'negative':r.t==='positive'?'positive':''}">${r.a<0?'-':''}${fmt(Math.abs(r.a))}</div>
+  </div>`).join('');
+
+  // -- RENDER: DTI
+  const dtiColor=backDTI<0.36?'var(--sage)':backDTI<0.43?'var(--warn)':'var(--danger)';
+  const dtiCls=backDTI<0.36?'good':backDTI<0.43?'warn':'danger';
+  const dtiPill=backDTI<0.36?'<span class="pill pill-good">Healthy</span>':backDTI<0.43?'<span class="pill pill-warn">Stretch</span>':'<span class="pill pill-bad">High Risk</span>';
+  document.getElementById('dti-value').innerHTML=`${(backDTI*100).toFixed(1)}%${dtiPill}`;
+  document.getElementById('dti-value').style.color=dtiColor;
+  document.getElementById('dti-fill').style.width=Math.min(backDTI/0.50*100,100)+'%';
+  document.getElementById('dti-fill').style.background=dtiColor;
+  document.getElementById('dti-note').textContent=backDTI<0.28?'Excellent. Front-end under 28% is ideal.':backDTI<0.36?'Good. Back-end under 36% is lender-preferred.':backDTI<0.43?'Caution -- most conventional loans cap at 43% back-end DTI.':'Above conventional limits. Consider paying down existing debt or adjusting home price.';
+
+  document.getElementById('debt-summary').innerHTML=[
+    {l:'Current Loan Payments',      v:fmt(debtPmt)+'/mo',           c:''},
+    {l:'Payments at Purchase Date',  v:fmt(debtPmtAtPurchase)+'/mo', c:debtPmtAtPurchase<debtPmt?'pos':''},
+    {l:'Fixed Expenses (non-DTI)',   v:fmt(totalExpenses)+'/mo',     c:''},
+    {l:'Front-End DTI (housing)',    v:fmtP(frontDTI),               c:frontDTI<0.28?'pos':frontDTI<0.36?'':'neg'},
+    {l:'Back-End DTI at Purchase',   v:fmtP(backDTI),                c:dtiCls==='good'?'pos':dtiCls==='warn'?'zero':'neg'},
+  ].map(r=>`<div class="budget-row"><span class="budget-lbl">${r.l}</span><span class="budget-val ${r.c}">${r.v}</span></div>`).join('');
+
+  // -- RENDER: House bar
+  document.getElementById('house-summary').innerHTML=`
+    <div><div class="hs-label">Total Down Payment</div><div class="hs-value">${fmt(totalDown)}</div><div class="hs-sub">equity ${fmt(equity)} + savings ${fmt(savedByClose)}${extraDownFromPayoffs>0?' + payoff savings '+fmt(extraDownFromPayoffs):''}</div></div>
+    <div class="hs-divider"></div>
+    <div><div class="hs-label">${priceOverride>0?'Target':'Max'} Home Price</div><div class="hs-value">${fmt(homePrice)}</div><div class="hs-sub">${fmtP(actualDownPct)} down . ${fmt(loan)} loan${mPMI>0?' . PMI applies':''}</div></div>
+    <div class="hs-divider"></div>
+    <div><div class="hs-label">Total Monthly Housing</div><div class="hs-value">${fmt(totalHousing)}</div><div class="hs-sub">P&amp;I + tax + ins${mPMI>0?' + PMI':''}</div></div>`;
+
+  // -- RENDER: Loan Payoff Outlook
+  document.getElementById('payoff-outlook').innerHTML=`
+    <table class="payoff-table">
+      <thead><tr>
+        <th>Loan</th><th>Current Pmt</th><th>Balance Today</th>
+        <th>Mo. Remaining</th><th>Status at Purchase</th><th>Balance at Purchase</th>
+      </tr></thead>
+      <tbody>${debtAtPurchase.map(d=>`
+        <tr class="${d.paidOff?'paid-off':'still-owed'}">
+          <td>${d.label||'Unnamed'}</td>
+          <td>${fmt(d.payment)}/mo</td>
+          <td>${fmt(d.balance)}</td>
+          <td>${d.moLeft >= 999 ? '--' : d.moLeft + ' mo'}</td>
+          <td>${d.paidOff
+            ? `<span class="payoff-tag done">Paid Off OK</span>`
+            : `<span class="payoff-tag owed">${d.moLeft - months} mo remaining</span>`}
+          </td>
+          <td>${d.paidOff ? '--' : fmt(d.balAtPurchase)}</td>
+        </tr>`).join('')}
+        <tr style="border-top:2px solid var(--rule);">
+          <td style="color:var(--ink);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">Totals</td>
+          <td>${fmt(debtPmt)}/mo</td>
+          <td>${fmt(debtBal)}</td>
+          <td>--</td>
+          <td style="font-size:10px;color:var(--muted);">${debtAtPurchase.filter(d=>d.paidOff).length} of ${debts.length} paid off</td>
+          <td>${fmt(debtPmtAtPurchase)}/mo remaining</td>
+        </tr>
+      </tbody>
+    </table>
+    ${extraDownFromPayoffs>0?`<p class="note" style="margin-top:10px;">&#x1F4A1; ${fmt(extraDownFromPayoffs)} in freed-up payments added to your down payment pool from early loan payoffs.</p>`:''}`;
+
+  // -- RENDER: Price Comparison
+  renderPriceComparison({ totalDown, mTakeHome, rate, years, propTaxR, insAnn, debtPmtAtPurchase, totalExpenses, curPayment, gm });
+
+  // -- RENDER: Active price note and mortgage panel label
+  const activePriceNote = document.getElementById('active-price-note');
+  if (activePriceNote) {
+    activePriceNote.textContent = priceOverride > 0
+      ? 'Modeling ' + fmt(priceOverride) + ' -- mortgage breakdown below reflects this price.'
+      : 'No price set -- enter one above or click Use in the comparison table.';
+    activePriceNote.style.color = priceOverride > 0 ? 'var(--sage)' : 'var(--muted)';
+  }
+  document.getElementById('mortgage-panel-label').textContent = priceOverride > 0
+    ? 'Mortgage Breakdown -- ' + fmt(homePrice)
+    : 'Mortgage Breakdown -- no price selected';
+  document.getElementById('mortgage-results').innerHTML=`
+    <div class="result-cell"><div class="cell-label">Principal &amp; Interest</div><div class="cell-value">${fmt(mPI)}</div><div class="cell-sub">${years}-yr . ${parseFloat(rate).toFixed(3)}% rate</div></div>
+    <div class="result-cell"><div class="cell-label">Property Tax</div><div class="cell-value">${fmt(mTax)}</div><div class="cell-sub">${(propTaxR*100).toFixed(2)}% annual</div></div>
+    <div class="result-cell"><div class="cell-label">Home Insurance</div><div class="cell-value">${fmt(mIns)}</div><div class="cell-sub">${fmt(insAnn)} / year</div></div>
+    ${mPMI>0?`<div class="result-cell warn-cell"><div class="cell-label">PMI (est.)</div><div class="cell-value warn">${fmt(mPMI)}</div><div class="cell-sub">drops at 20% equity</div></div>`:''}
+    <div class="result-cell highlight"><div class="cell-label">Total Housing PITI${mPMI>0?'+PMI':''}</div><div class="cell-value">${fmt(totalHousing)}</div><div class="cell-sub">${fmtP(totalHousing/mTakeHome)} of take-home</div></div>
+    <div class="result-cell ${afterAll<0?'danger-cell':''}"><div class="cell-label">Remaining After All</div><div class="cell-value ${afterAll<0?'danger':afterAll<2000?'warn':'good'}">${fmt(afterAll)}</div><div class="cell-sub">incl. current home . dual-carry scenario</div></div>`;
+
+  // -- Budget
+  const bRows=[
+    {l:'Monthly Take-Home',              v:fmt(mTakeHome),               c:'pos'},
+    {l:'Current Mortgage (PITI)',         v:'- '+fmt(curPayment),         c:'neg'},
+    {l:'New Mortgage P&amp;I',           v:'- '+fmt(mPI),                c:'neg'},
+    {l:'New Property Tax',               v:'- '+fmt(mTax),               c:'neg'},
+    {l:'New Home Insurance',             v:'- '+fmt(mIns),               c:'neg'},
+    ...(mPMI>0?[{l:'PMI',               v:'- '+fmt(mPMI),               c:'neg'}]:[]),
+    ...(debtPmtAtPurchase>0?[{l:`Loan Payments at Close (${debtAtPurchase.filter(d=>!d.paidOff).length})`, v:'- '+fmt(debtPmtAtPurchase), c:'neg'}]:[]),
+    ...(totalExpenses>0?[{l:`Fixed Expenses (${expenses.length})`,        v:'- '+fmt(totalExpenses),        c:'neg'}]:[]),
+    {l:'Left Over -- groceries, savings, fun', v:fmt(afterAll), c:afterAll<0?'neg':afterAll<1500?'zero':'pos', total:true},
+  ];
+  document.getElementById('budget-breakdown').innerHTML=bRows.map(r=>`
+    <div class="budget-row ${r.total?'total':''}">
+      <span class="budget-lbl">${r.l}</span>
+      <span class="budget-val ${r.c}">${r.v}</span>
+    </div>`).join('');
+
+  // -- Amortization
+  const sched=buildSchedule(loan,rate,years);
+  renderAmort(sched,years);
+
+  // Footnotes
+  document.getElementById('footnotes').innerHTML=`Tax: Federal MFJ + $30k standard deduction . Ohio 0%<=$26,050 . 2.75%<=$100k . 3.125% above (2025, per earner) . Columbus city 2.5% . FICA SS 6.2% to $176,100 + Medicare 1.45% . 401k limit $23,500/person . PMI est. 0.65%/yr, drops at 20% equity . DTI thresholds: 28% front-end / 36% back-end preferred; 43% conventional max . This is an estimate -- consult a CPA and mortgage lender for your actual numbers.`;
+}
+
+function selectPrice(price, label) {
+  document.getElementById('homeprice_override').value = price;
+  calculate();
+  document.getElementById('mortgage-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderPriceComparison({ totalDown, mTakeHome, rate, years, propTaxR, insAnn, debtPmtAtPurchase, totalExpenses, curPayment, gm }){
+  const tbody = document.getElementById('price-comp-body');
+  const foot  = document.getElementById('price-comp-foot');
+  const activePrice = +document.getElementById('homeprice_override').value || 0;
+
+  if (!priceScenarios.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="color:#7A6F62;font-family:'DM Mono',monospace;font-size:11px;padding:20px 12px;">Add a price above to compare scenarios -- then click "Use" to load it into the mortgage breakdown below.</td></tr>`;
+    foot.textContent = '';
+    return;
+  }
+
+  tbody.innerHTML = priceScenarios.map(s => {
+    const price   = s.price;
+    const loan    = Math.max(0, price - totalDown);
+    const downAmt = price - loan;
+    const downPct = price > 0 ? downAmt / price : 0;
+    const pi      = calcPI(loan, rate, years);
+    const tax     = (price * propTaxR) / 12;
+    const ins     = insAnn / 12;
+    const pmi     = downPct < 0.20 ? loan * 0.0065 / 12 : 0;
+    const piti    = pi + tax + ins + pmi;
+    const dti     = (piti + debtPmtAtPurchase) / gm;
+    const left    = mTakeHome - piti - debtPmtAtPurchase - totalExpenses - curPayment;
+
+    const dtiCls  = dti < 0.36 ? 'ok' : dti < 0.43 ? 'warn' : 'bad';
+    const leftCls = left < 0 ? 'bad' : left < 1500 ? 'warn' : 'ok';
+    const downCls = downPct >= 0.20 ? 'ok' : downPct >= 0.10 ? 'warn' : 'bad';
+    const isActive = activePrice > 0 && Math.abs(price - activePrice) < 1;
+    const rowStyle = isActive ? 'background:#1A3020;' : '';
+
+    return `<tr style="${rowStyle}">
+      <td>
+        <div style="font-weight:500;color:var(--gold);font-family:'Playfair Display',serif;font-size:15px;">${fmt(price)}</div>
+        <div style="font-size:9px;color:#7A6F62;margin-top:2px;">${escapeHtml(s.label)}</div>
+      </td>
+      <td class="gold">${fmt(downAmt)}</td>
+      <td class="${downCls}">${fmtP(downPct)}${pmi>0?' <span style="font-size:9px;opacity:0.7;">+PMI</span>':''}</td>
+      <td>${fmt(loan)}</td>
+      <td>${fmt(pi)}</td>
+      <td class="gold">${fmt(piti)}</td>
+      <td style="color:${pmi>0?'#E8A44A':'#7DC470'};font-size:12px;">${pmi>0?fmt(pmi)+'/mo':'None'}</td>
+      <td class="${dtiCls}">${fmtP(dti)}</td>
+      <td class="${leftCls}">${fmt(left)}</td>
+      <td>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button class="btn-use-price${isActive?' active':''}" onclick="selectPrice(${price})" title="Load into mortgage breakdown">${isActive?'Active':'Use'}</button>
+          <button class="price-del" onclick="removePriceScenario(${s.id})">x</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Summary footnote
+  const best = priceScenarios.reduce((b, s) => {
+    const loan = Math.max(0, s.price - totalDown);
+    const downPct = (s.price - loan) / s.price;
+    const piti = calcPI(loan,rate,years) + (s.price*propTaxR)/12 + insAnn/12 + (downPct<0.20?loan*0.0065/12:0);
+    const left = mTakeHome - piti - debtPmtAtPurchase - totalExpenses - curPayment;
+    return left > b.left ? { label: s.label, price: s.price, left } : b;
+  }, { left: -Infinity, label: '', price: 0 });
+
+  foot.innerHTML = `Down payment available: <strong style="color:var(--gold);">${fmt(totalDown)}</strong> &nbsp;.&nbsp; Rate: <strong>${parseFloat(rate).toFixed(3)}%</strong> &nbsp;.&nbsp; Term: <strong>${years}-yr</strong>${best.price>0?' &nbsp;.&nbsp; Best headroom: <strong style="color:#7DC470;">'+escapeHtml(best.label)+' @ '+fmt(best.price)+'</strong>':''}`;
+}
+
+function renderAmort(sched,years){
+  const c=document.getElementById('amort-table-container');
+  if(amortMonthly){
+    c.innerHTML=`<table><thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody>`+
+      sched.map(r=>`<tr><td>Mo ${r.month}</td><td>${fmtD(r.payment)}</td><td>${fmtD(r.principal)}</td><td>${fmtD(r.interest)}</td><td>${fmtD(r.balance)}</td></tr>`).join('')+
+      `</tbody></table>`;
+  } else {
+    const ann=[];
+    for(let y=1;y<=years;y++){
+      const sl=sched.slice((y-1)*12,y*12);
+      ann.push({year:y,payment:sl.reduce((s,r)=>s+r.payment,0),principal:sl.reduce((s,r)=>s+r.principal,0),interest:sl.reduce((s,r)=>s+r.interest,0),balance:sl[sl.length-1]?.balance||0});
+    }
+    c.innerHTML=`<table><thead><tr><th>Year</th><th>Total Paid</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody>`+
+      ann.map(r=>`<tr><td>Year ${r.year}</td><td>${fmtD(r.payment)}</td><td>${fmtD(r.principal)}</td><td>${fmtD(r.interest)}</td><td>${fmtD(r.balance)}</td></tr>`).join('')+
+      `</tbody></table>`;
+  }
+}
+
+// -- Init -------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('new-price-input').addEventListener('keydown', function(e){ if(e.key==='Enter') addPriceScenario(); });
+  document.getElementById('new-price-label').addEventListener('keydown', function(e){ if(e.key==='Enter') addPriceScenario(); });
+  renderDebts();
+  renderExpenses();
+  renderAssets();
+  calculate();
+});
+</script>
+</body>
+</html>
