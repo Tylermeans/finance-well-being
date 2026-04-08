@@ -377,6 +377,18 @@
   .k401-dual { display: flex; gap: 8px; align-items: stretch; }
   .k401-dual > div { flex: 1; }
 
+  /* Mortgage gate — blurred until a price is selected */
+  .mortgage-gate { position: relative; }
+  .mortgage-gate.locked > .gate-content { filter: blur(8px); pointer-events: none; user-select: none; }
+  .mortgage-gate.locked > .gate-overlay {
+    position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; padding: 40px;
+  }
+  .mortgage-gate:not(.locked) > .gate-overlay { display: none; }
+  .gate-overlay-icon { font-size: 40px; margin-bottom: 12px; color: var(--rust); font-family: var(--font-serif); font-weight: 900; }
+  .gate-overlay-title { font-family: var(--font-serif); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .gate-overlay-sub { font-size: 13px; color: var(--muted); max-width: 400px; line-height: 1.7; }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
@@ -928,21 +940,30 @@
     </div>
   </div>
 
-  <!-- Mortgage breakdown -->
-  <div class="panel panel-full">
-    <div class="panel-label" id="mortgage-panel-label">Mortgage Payment Breakdown</div>
-    <div class="results-grid" id="mortgage-results"></div>
+  <!-- Mortgage breakdown — gated until a price is selected -->
+  <div class="mortgage-gate locked" id="mortgage-gate">
+    <div class="gate-overlay">
+      <div class="gate-overlay-icon">?</div>
+      <div class="gate-overlay-title">Select a Home Price First</div>
+      <div class="gate-overlay-sub">Add a price in the comparison table above and click "Use" — or type a price directly into the Active Home Price field. Your full mortgage breakdown will appear here.</div>
+    </div>
+    <div class="gate-content">
+      <div class="panel panel-full">
+        <div class="panel-label" id="mortgage-panel-label">Mortgage Payment Breakdown</div>
+        <div class="results-grid" id="mortgage-results"></div>
 
-    <div class="panel-label" style="margin-top:28px;">Monthly Budget After All Obligations</div>
-    <div id="budget-breakdown"></div>
+        <div class="panel-label" style="margin-top:28px;">Monthly Budget After All Obligations</div>
+        <div id="budget-breakdown"></div>
 
-    <button class="amort-btn" id="amort-btn" onclick="toggleAmort()">Show Amortization Schedule</button>
-    <div class="amort-wrap" id="amort-wrap">
-      <div class="amort-toolbar">
-        <span style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);">Amortization</span>
-        <button class="amort-view-btn" id="amort-view-btn" onclick="toggleAmortView()">Switch to Monthly View</button>
+        <button class="amort-btn" id="amort-btn" onclick="toggleAmort()">Show Amortization Schedule</button>
+        <div class="amort-wrap" id="amort-wrap">
+          <div class="amort-toolbar">
+            <span style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);">Amortization</span>
+            <button class="amort-view-btn" id="amort-view-btn" onclick="toggleAmortView()">Switch to Monthly View</button>
+          </div>
+          <div id="amort-table-container"></div>
+        </div>
       </div>
-      <div id="amort-table-container"></div>
     </div>
   </div>
 
@@ -1862,6 +1883,10 @@ function calculate(){
       : 'No price set — enter one above or click Use in the comparison table.';
     activePriceNote.style.color = priceOverride > 0 ? 'var(--sage)' : 'var(--muted)';
   }
+  // Gate: lock/unlock mortgage breakdown based on active price
+  const gate = document.getElementById('mortgage-gate');
+  if(gate) gate.classList.toggle('locked', priceOverride <= 0);
+
   document.getElementById('mortgage-panel-label').textContent = priceOverride > 0
     ? 'Mortgage Breakdown — ' + fmt(homePrice)
     : 'Mortgage Breakdown — no price selected';
