@@ -269,11 +269,11 @@
   <div class="panel">
     <div class="panel-label">Property</div>
     <div class="field"><label>Current Market Value</label>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" id="cur_value" value="0" min="0" max="5000000" step="5000" oninput="calculate()"></div></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" id="cur_value" value="0" oninput="calculate()" class="dollar-input"></div></div>
     <div class="field"><label>Remaining Loan Balance</label>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" id="cur_balance" value="0" min="0" max="5000000" step="1000" oninput="calculate()"></div></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" id="cur_balance" value="0" oninput="calculate()" class="dollar-input"></div></div>
     <div class="field"><label>Current Monthly Payment (PITI)</label>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" id="cur_payment" value="0" min="0" max="20000" step="50" oninput="calculate()"></div></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" id="cur_payment" value="0" oninput="calculate()" class="dollar-input"></div></div>
   </div>
   <div class="panel">
     <div class="panel-label">Remaining Loan</div>
@@ -327,7 +327,7 @@
         <div class="field">
           <label>Updates / Concessions <span style="font-size:11px;color:var(--muted);font-weight:400;">(pre-sale repairs, buyer credits)</span></label>
           <div class="prefix-wrap" data-prefix="$">
-            <input type="number" id="sale_concessions" value="0" min="0" max="100000" step="500" oninput="calculate()">
+            <input type="text" inputmode="decimal" id="sale_concessions" value="0" oninput="calculate()" class="dollar-input">
           </div>
         </div>
       </div>
@@ -380,9 +380,9 @@
   <div class="panel">
     <div class="panel-label">Salaries</div>
     <div class="field"><label>Your Gross Salary</label>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" id="salary1" value="0" min="0" max="1000000" step="1000" oninput="calculate()"></div></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" id="salary1" value="0" oninput="calculate()" class="dollar-input"></div></div>
     <div class="field"><label>Spouse Gross Salary</label>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" id="salary2" value="0" min="0" max="1000000" step="1000" oninput="calculate()"></div></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" id="salary2" value="0" oninput="calculate()" class="dollar-input"></div></div>
     <div class="field"><label>Filing Status</label>
       <select id="filing_status" onchange="calculate()">
         <option value="mfj">Married Filing Jointly</option>
@@ -471,9 +471,9 @@
   <div class="panel">
     <div class="panel-label">Down Payment</div>
     <div class="field"><label>Equity from Sale <span style="color:var(--rust);font-size:8px;">(auto from §00)</span></label>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" id="equity" value="0" min="0" max="2000000" step="5000" oninput="calculate()" style="background:#F0EDE6;color:var(--muted);" readonly></div></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" id="equity" value="0" oninput="calculate()" style="background:#F0EDE6;color:var(--muted);" readonly class="dollar-input"></div></div>
     <div class="field"><label>Monthly Savings Toward House</label>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" id="monthlysave" value="0" min="0" max="20000" step="100" oninput="calculate()"></div></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" id="monthlysave" value="0" oninput="calculate()" class="dollar-input"></div></div>
     <div class="field"><label>Months Until Purchase</label>
       <input type="number" id="months" value="12" min="1" max="120" step="1" oninput="calculate()">
       <input type="range" id="monthsr" min="1" max="60" step="1" value="12" oninput="document.getElementById('months').value=this.value;calculate()">
@@ -499,14 +499,14 @@
     <div class="field"><label>Annual Property Tax Rate</label>
       <div class="suffix-wrap" data-suffix="%"><input type="number" id="proptax" value="1.36" min="0" max="5" step="0.01" oninput="calculate()"></div></div>
     <div class="field"><label>Annual Home Insurance</label>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" id="insurance" value="1800" min="0" max="20000" step="100" oninput="calculate()"></div></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" id="insurance" value="1,800" oninput="calculate()" class="dollar-input"></div></div>
     <div class="field">
       <label>Active Home Price <span style="color:var(--rust);font-size:8px;">— set via comparison table below</span></label>
       <div style="display:flex;gap:8px;align-items:stretch;">
         <div class="prefix-wrap" data-prefix="$" style="flex:1;">
-          <input type="number" id="homeprice_override" value="" min="0" max="5000000" step="5000"
+          <input type="text" inputmode="decimal" id="homeprice_override" value=""
             placeholder="or type directly here..." oninput="calculate()"
-            style="border:2px solid var(--rust);">
+            style="border:2px solid var(--rust);" class="dollar-input">
         </div>
         <button onclick="document.getElementById('homeprice_override').value='';calculate();"
           style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;padding:0 12px;background:none;border:1px solid var(--rule);color:var(--muted);cursor:pointer;white-space:nowrap;">
@@ -533,7 +533,7 @@
 
     <div class="price-input-row">
       <div class="prefix-wrap" data-prefix="$" style="position:relative;">
-        <input type="number" id="new-price-input" min="0" max="5000000" step="5000" placeholder="Enter price..." style="background:#261E18;border-color:#3A3028;color:var(--cream);width:180px;">
+        <input type="text" inputmode="decimal" id="new-price-input" placeholder="Enter price..." style="background:#261E18;border-color:#3A3028;color:var(--cream);width:180px;" class="dollar-input">
       </div>
       <input type="text" id="new-price-label" placeholder="Label (optional)" style="background:#261E18;border-color:#3A3028;color:var(--cream);">
       <button class="btn-add-price" onclick="addPriceScenario()">+ Add Price</button>
@@ -603,17 +603,49 @@ let nextExpId = 101;
 let amortMonthly = false;
 
 // -- localStorage persistence -----------------------------------------------
+// -- Dollar input formatting ------------------------------------------------
+// Parse a string that may contain commas into a number
+function parseNum(v){ return +(String(v).replace(/,/g,'')) || 0; }
+// Format a number with commas (no decimals)
+function commaFmt(n){ return Math.round(n).toLocaleString('en-US'); }
+// Read a dollar input by id, stripping commas
+function readDollar(id){ return parseNum(document.getElementById(id).value); }
+
+// Auto-format: on blur add commas, on focus strip them for easy editing
+function initDollarInput(el){
+  el.addEventListener('blur', function(){
+    const v = parseNum(this.value);
+    if(v > 0) this.value = commaFmt(v);
+  });
+  el.addEventListener('focus', function(){
+    const v = parseNum(this.value);
+    this.value = v > 0 ? v : '';
+  });
+  // Format initial value if present
+  const v = parseNum(el.value);
+  if(v > 0) el.value = commaFmt(v);
+}
+// Format a dollar input element's current value (for dynamic inputs)
+function formatDollarEl(el){
+  if(document.activeElement === el) return; // don't format while editing
+  const v = parseNum(el.value);
+  if(v > 0) el.value = commaFmt(v);
+}
+
 const STORAGE_KEY = 'houseFundCalculator';
 function saveToStorage(){
-  const inputIds = [
-    'cur_value','cur_balance','cur_payment','cur_yrs','cur_mos','sell_costs_pct',
-    'sale_price_slider','sale_commission','sale_closing_pct','sale_concessions',
-    'salary1','salary2','filing_status','k401_1','k401_2','state_tax_rate','local_tax_rate',
-    'monthlysave','months','downpct','loanterm','mortrate','proptax','insurance',
-    'homeprice_override'
-  ];
+  const dollarIds = ['cur_value','cur_balance','cur_payment','sale_concessions',
+    'salary1','salary2','monthlysave','insurance','homeprice_override'];
+  const plainIds = ['cur_yrs','cur_mos','sell_costs_pct',
+    'sale_price_slider','sale_commission','sale_closing_pct',
+    'filing_status','k401_1','k401_2','state_tax_rate','local_tax_rate',
+    'months','downpct','loanterm','mortrate','proptax'];
   const inputs = {};
-  inputIds.forEach(id => {
+  dollarIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) inputs[id] = parseNum(el.value);
+  });
+  plainIds.forEach(id => {
     const el = document.getElementById(id);
     if(el) inputs[id] = el.value;
   });
@@ -725,8 +757,8 @@ function renderDebts(){
   document.getElementById('debt-list').innerHTML = debts.map(d=>`
     <div class="debt-item" id="di-${d.id}" style="grid-template-columns:1.4fr 90px 100px 80px 70px 36px;">
       <input type="text" value="${d.label}" placeholder="e.g. Car Loan" oninput="ud(${d.id},'label',this.value)">
-      <div class="prefix-wrap" data-prefix="$"><input type="number" value="${d.payment}" min="0" step="10" placeholder="0" oninput="ud(${d.id},'payment',+this.value||0)"></div>
-      <div class="prefix-wrap" data-prefix="$"><input type="number" value="${d.balance}" min="0" step="100" placeholder="0" oninput="ud(${d.id},'balance',+this.value||0)"></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" value="${d.payment?commaFmt(d.payment):''}" placeholder="0" oninput="ud(${d.id},'payment',parseNum(this.value))" onblur="formatDollarEl(this)" onfocus="this.value=parseNum(this.value)||''" class="dollar-input"></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" value="${d.balance?commaFmt(d.balance):''}" placeholder="0" oninput="ud(${d.id},'balance',parseNum(this.value))" onblur="formatDollarEl(this)" onfocus="this.value=parseNum(this.value)||''" class="dollar-input"></div>
       <div class="suffix-wrap" data-suffix="%"><input type="number" value="${d.rate||0}" min="0" max="30" step="0.1" placeholder="0" oninput="ud(${d.id},'rate',+this.value||0)"></div>
       <input type="number" value="${d.termMonths||0}" min="0" max="360" step="1" placeholder="0" oninput="ud(${d.id},'termMonths',+this.value||0)">
       <button class="debt-del" onclick="removeDebt(${d.id})">x</button>
@@ -741,7 +773,7 @@ function renderExpenses(){
   document.getElementById('expense-list').innerHTML = expenses.map(e=>`
     <div class="debt-item" id="ei-${e.id}">
       <input type="text" value="${e.label}" placeholder="e.g. Electric" oninput="ue(${e.id},'label',this.value)">
-      <div class="prefix-wrap" data-prefix="$" style="grid-column:span 2"><input type="number" value="${e.amount}" min="0" step="10" placeholder="0" oninput="ue(${e.id},'amount',+this.value||0)"></div>
+      <div class="prefix-wrap" data-prefix="$" style="grid-column:span 2"><input type="text" inputmode="decimal" value="${e.amount?commaFmt(e.amount):''}" placeholder="0" oninput="ue(${e.id},'amount',parseNum(this.value))" onblur="formatDollarEl(this)" onfocus="this.value=parseNum(this.value)||''" class="dollar-input"></div>
       <button class="debt-del" onclick="removeExpense(${e.id})">x</button>
     </div>`).join('');
 }
@@ -754,7 +786,7 @@ function renderAssets(){
   document.getElementById('asset-list').innerHTML = assets.map(a=>`
     <div class="debt-item" id="ai-${a.id}" style="grid-template-columns:1fr 1fr 36px;">
       <input type="text" value="${a.label}" placeholder="e.g. Boat" oninput="ua(${a.id},'label',this.value)">
-      <div class="prefix-wrap" data-prefix="$"><input type="number" value="${a.value}" min="0" step="100" placeholder="0" oninput="ua(${a.id},'value',+this.value||0)"></div>
+      <div class="prefix-wrap" data-prefix="$"><input type="text" inputmode="decimal" value="${a.value?commaFmt(a.value):''}" placeholder="0" oninput="ua(${a.id},'value',parseNum(this.value))" onblur="formatDollarEl(this)" onfocus="this.value=parseNum(this.value)||''" class="dollar-input"></div>
       <button class="debt-del" onclick="removeAsset(${a.id})">x</button>
     </div>`).join('');
 }
@@ -763,7 +795,7 @@ function removeAsset(id){assets=assets.filter(a=>a.id!==id);const el=document.ge
 function ua(id,field,val){const a=assets.find(x=>x.id===id);if(a)a[field]=val;calculate();}
 
 function addPriceScenario(){
-  const price = +document.getElementById('new-price-input').value || 0;
+  const price = parseNum(document.getElementById('new-price-input').value);
   const label = document.getElementById('new-price-label').value.trim() || fmt(price);
   if (!price) return;
   priceScenarios.push({ id: nextPriceId++, price, label });
@@ -798,7 +830,7 @@ function onSaleSlider() {
 // -- 401k sync --------------------------------------------------------------
 function sync401(p){
   const pct=parseFloat(document.getElementById('k401_'+p).value)||0;
-  const sal=parseFloat(document.getElementById('salary'+p).value)||0;
+  const sal=readDollar('salary'+p);
   const annual=Math.min(sal*pct/100,23500);
   document.getElementById('k401_'+p+'r').value=pct;
   document.getElementById('k401_'+p+'_disp').textContent=fmt(annual)+' / yr';
@@ -811,8 +843,8 @@ function syncRange(p){
 
 // -- MAIN -------------------------------------------------------------------
 function calculate(){
-  const s1=+document.getElementById('salary1').value||0;
-  const s2=+document.getElementById('salary2').value||0;
+  const s1=readDollar('salary1');
+  const s2=readDollar('salary2');
   const k1pct=Math.min(+document.getElementById('k401_1').value||0,100)/100;
   const k2pct=Math.min(+document.getElementById('k401_2').value||0,100)/100;
   const k1=Math.min(s1*k1pct,23500), k2=Math.min(s2*k2pct,23500);
@@ -821,18 +853,18 @@ function calculate(){
   document.getElementById('k401_1_disp').textContent=fmt(k1)+' / yr';
   document.getElementById('k401_2_disp').textContent=fmt(k2)+' / yr';
   const downPct=(+document.getElementById('downpct').value||20)/100;
-  const mSave=+document.getElementById('monthlysave').value||0;
+  const mSave=readDollar('monthlysave');
   const months=+document.getElementById('months').value||18;
   const years=+document.getElementById('loanterm').value||30;
   const rate=+document.getElementById('mortrate').value||6.75;
   const propTaxR=(+document.getElementById('proptax').value||1.36)/100;
-  const insAnn=+document.getElementById('insurance').value||1800;
-  const priceOverride=+document.getElementById('homeprice_override').value||0;
+  const insAnn=readDollar('insurance')||1800;
+  const priceOverride=readDollar('homeprice_override');
 
   // -- Current Home + Sale Calculator
-  const curValue   = +document.getElementById('cur_value').value||0;
-  const curBalance = +document.getElementById('cur_balance').value||0;
-  const curPayment = +document.getElementById('cur_payment').value||0;
+  const curValue   = readDollar('cur_value');
+  const curBalance = readDollar('cur_balance');
+  const curPayment = readDollar('cur_payment');
   const curYrs     = +document.getElementById('cur_yrs').value||0;
   const curMos     = +document.getElementById('cur_mos').value||0;
   const curLTV     = curValue > 0 ? curBalance / curValue : 0;
@@ -842,7 +874,7 @@ function calculate(){
   const salePrice      = +document.getElementById('sale_price_slider').value || curValue;
   const commissionPct  = (+document.getElementById('sale_commission').value||5.5)/100;
   const saleClosingPct = (+document.getElementById('sale_closing_pct').value||1)/100;
-  const concessions    = +document.getElementById('sale_concessions').value||0;
+  const concessions    = readDollar('sale_concessions');
   const commissionAmt  = salePrice * commissionPct;
   const saleClosingAmt = salePrice * saleClosingPct;
   const totalSaleCosts = commissionAmt + saleClosingAmt + concessions;
@@ -862,8 +894,8 @@ function calculate(){
     vsEl.style.color = vsMarket < 0 ? 'var(--warn)' : vsMarket > 0 ? 'var(--sage)' : 'var(--muted)';
   }
 
-  // Auto-populate equity field
-  document.getElementById('equity').value = Math.round(netEquity);
+  // Auto-populate equity field (formatted with commas)
+  document.getElementById('equity').value = commaFmt(netEquity);
   const equity = netEquity;
 
   // Sync sliders/displays
@@ -1141,7 +1173,7 @@ function calculate(){
 }
 
 function selectPrice(price, label) {
-  document.getElementById('homeprice_override').value = price;
+  document.getElementById('homeprice_override').value = commaFmt(price);
   calculate();
   document.getElementById('mortgage-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1231,6 +1263,8 @@ function renderAmort(sched,years){
 // -- Init -------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function() {
   loadFromStorage();
+  // Initialize comma formatting on all static dollar inputs
+  document.querySelectorAll('.dollar-input').forEach(initDollarInput);
   document.getElementById('new-price-input').addEventListener('keydown', function(e){ if(e.key==='Enter') addPriceScenario(); });
   document.getElementById('new-price-label').addEventListener('keydown', function(e){ if(e.key==='Enter') addPriceScenario(); });
   renderDebts();
