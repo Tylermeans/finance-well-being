@@ -378,7 +378,7 @@
   .k401-dual > div { flex: 1; }
 
   /* Mortgage gate — blurred until a price is selected */
-  .mortgage-gate { position: relative; }
+  .mortgage-gate { position: relative; grid-column: 1 / -1; }
   .mortgage-gate.locked > .gate-content { filter: blur(8px); pointer-events: none; user-select: none; }
   .mortgage-gate.locked > .gate-overlay {
     position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column;
